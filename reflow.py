@@ -260,7 +260,7 @@ def mode_run(ov, clock, args):
 
 def mode_vendor(ov, clock, args):
     """Vendor stage logic: 4 stages of (target, hold s), step setpoints,
-    0.5 s loop, convection fan on; cooling fan speed 0 while heating, 50 when T > SP+5, 100 to cool."""
+    0.5 s loop, convection fan on; exhaust fan speed 0 while heating, 50 when T > SP+5, 100 to cool."""
     stages = [(100, 20), (150, 30), (240, 30), (240, 30)]  # approx. from your config.ini
     cool_to = args.cool_to
     pid = VendorPID()
@@ -308,7 +308,7 @@ def main(argv=None):
     ap.add_argument("--max-temp", type=int, default=260, help="hard cut-off C")
     ap.add_argument("--cool-to", type=int, default=80)
     ap.add_argument("--fan-enable", "--o36", dest="o36", type=int, default=1, help="convection fan enable during run (0/1)")
-    ap.add_argument("--fan-speed", "--o35", dest="o35", type=int, default=100, help="cooling fan speed %% during run (vendor app: 0)")
+    ap.add_argument("--fan-speed", "--o35", dest="o35", type=int, default=100, help="exhaust fan speed %% during run (vendor app: 0)")
     ap.add_argument("--profile", help="JSON list of [t_s, temp_C] points")
     ap.add_argument("--cal", help='calibration JSON {"points": [[oven_C, board_C], ...]}')
     ap.add_argument("--kp", type=float, default=3.0)

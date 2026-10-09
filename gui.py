@@ -285,7 +285,7 @@ class Chart(tk.Canvas):
         if any(d.get("board") is not None for d in self.samples):
             items.append(("Board (cal.)", "#7d3c98", None))
         items += [("Setpoint", "#7f8c8d", (6, 3)),
-                 ("Profile", "#bbbbbb", None), ("Heater %", "#f39c12", None), ("Cooling fan %", "#2471a3", (4, 3))]
+                 ("Profile", "#bbbbbb", None), ("Heater %", "#f39c12", None), ("Exhaust fan %", "#2471a3", (4, 3))]
         x = L + 10
         for name, col, dash in items:
             self.create_line(x, T + 10, x + 18, T + 10, fill=col, width=3 if name == "Profile" else 2, dash=dash)
@@ -379,7 +379,7 @@ class App(tk.Tk):
         self.run_o36 = tk.IntVar(value=1)
         self.run_o35 = tk.StringVar(value="100")
         ttk.Checkbutton(f, text="Convection fan on during run", variable=self.run_o36).grid(row=2, column=0, columnspan=2, sticky="w")
-        ttk.Label(f, text="Cooling fan % during run").grid(row=3, column=0, sticky="w")
+        ttk.Label(f, text="Exhaust fan % during run").grid(row=3, column=0, sticky="w")
         ttk.Spinbox(f, from_=0, to=100, increment=10, width=5, textvariable=self.run_o35).grid(row=3, column=1, sticky="e")
         self.gain_vars = {}
         for i, (k, v, lbl) in enumerate([("kp", 3.0, "Kp  %/°C"), ("ki", 0.05, "Ki  %/°C·s"),
@@ -401,7 +401,7 @@ class App(tk.Tk):
         self.man_heat_lbl = ttk.Label(f, text="0", width=4)
         self.man_heat_lbl.grid(row=0, column=2)
         ttk.Scale(f, from_=0, to=100, variable=self.man_heat, command=lambda v: self.manual_changed()).grid(row=0, column=1, sticky="ew")
-        ttk.Label(f, text="Cooling fan %").grid(row=1, column=0, sticky="w")
+        ttk.Label(f, text="Exhaust fan %").grid(row=1, column=0, sticky="w")
         self.man_o35_lbl = ttk.Label(f, text="0", width=4)
         self.man_o35_lbl.grid(row=1, column=2)
         ttk.Scale(f, from_=0, to=100, variable=self.man_o35, command=lambda v: self.manual_changed()).grid(row=1, column=1, sticky="ew")
@@ -456,7 +456,7 @@ class App(tk.Tk):
         top.pack(fill="x")
         self.readouts = {}
         for key, title in [("temp", "Oven sensor °C"), ("board", "Board est. °C"), ("sp", "Setpoint °C"), ("heater", "Heater %"),
-                           ("o35", "Cooling fan %"), ("o36", "Convection fan"), ("phase", "Phase"), ("time", "Run time")]:
+                           ("o35", "Exhaust fan %"), ("o36", "Convection fan"), ("phase", "Phase"), ("time", "Run time")]:
             box = ttk.Frame(top, padding=(10, 0))
             box.pack(side="left")
             ttk.Label(box, text=title, foreground="#666").pack(anchor="w")
