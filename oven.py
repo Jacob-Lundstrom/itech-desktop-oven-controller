@@ -17,9 +17,9 @@ except ImportError:  # allow the simulator to be used without pyserial
 
 # Command bytes (2nd byte of an A0 "write" frame)
 OUT_HEATER = 0x34   # heater power, 0..100 %
-FAN_SPEED = 0x35    # convection fan speed 0..100 %   (confirmed on RF-A250)
-FAN_ENABLE = 0x36   # convection fan enable 0/1       (confirmed on RF-A250)
-OUT_35, OUT_36 = FAN_SPEED, FAN_ENABLE   # old names
+COOL_FAN   = 0x35   # cooling fan speed 0..100 %       (confirmed on RF-A250)
+CONVECTION = 0x36   # convection fan enable 0/1        (confirmed on RF-A250)
+OUT_35, OUT_36 = COOL_FAN, CONVECTION   # register-number aliases
 
 
 def crc16(data: bytes) -> int:
@@ -108,10 +108,13 @@ class Oven:
     def heater(self, pct: float) -> None:
         self.set_output(OUT_HEATER, int(round(max(0.0, min(100.0, pct)))))
 
-    def fan(self, speed: float, enable: bool = True) -> None:
-        """Convection fan: enable flag + speed %."""
-        self.set_output(FAN_ENABLE, 1 if enable else 0)
-        self.set_output(FAN_SPEED, int(round(max(0.0, min(100.0, speed)))))
+    def convection(self, enable: bool = True) -> None:
+        """Convection (circulation) fan - enable only, no speed (reg 0x36)."""
+        self.set_output(CONVECTION, 1 if enable else 0)
+
+    def cooling_fan(self, speed: float) -> None:
+        """Cooling fan speed % (reg 0x35)."""
+        self.set_output(COOL_FAN, int(round(max(0.0, min(100.0, speed)))))
 
     def safe_off(self) -> None:
         """Best-effort: heater off, outputs off. Never raises."""

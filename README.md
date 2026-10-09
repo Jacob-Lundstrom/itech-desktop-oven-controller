@@ -15,7 +15,7 @@ I recovered this by static analysis of `ZBHLH_V1.0\Main.exe`, an MFC/C++ program
 | Unlink | `03 00 00 C0 81` | 3 bytes, first = `06` | (0x404d90) |
 | Read temperature | `A1 38 02 23 B2` | `A1 38 02 TH TL CH CL` (7) | Temperature = `TH<<8 \| TL`, whole °C. CRC is over the first 5 bytes (0x404470). `38` looks like an address and `02` a byte count |
 | Heater power | `A0 34 01 PP CH CL` | `A0 34 01 CH CL` (5) | PP = 0–100 % (0x404f50) |
-| **Convection fan speed** (0x35) | `A0 35 01 VV CH CL` | 5 bytes | VV = 0–100 %. App writes 0, 50 or 100 (0x4050d0) |
+| **Cooling fan speed** (0x35) | `A0 35 01 VV CH CL` | 5 bytes | VV = 0–100 %. App writes 0, 50 or 100 (0x4050d0) |
 | **Convection fan enable** (0x36) | `A0 36 01 VV CH CL` | 5 bytes | 0/1. App writes 1 at run start and 0 at the end (0x405250) |
 
 Examples: heater 0 % = `A0 34 01 00 7A 62`, heater 100 % = `A0 34 01 64 91 63`, fan enable on = `A0 36 01 01 7A 02`, fan speed 100 % = `A0 35 01 64 51 32`.
@@ -39,9 +39,9 @@ Why this overshoots:
 5. Cool-down sets heater = 0 and fan speed 100 % until T ≤ stage-5 temperature, then turns the fan off.
 
 ### Fans (confirmed on the RF-A250)
-**0x35 is convection fan speed and 0x36 is convection fan enable.** The vendor app sets enable = 1 but **speed = 0 for the whole heating phase**. The fan only spins at 50 % when the oven overshoots by more than 5 °C, and at 100 % during cool-down. So the oven heats with no forced convection, which makes the temperature less even and makes overshoot worse.
+**0x36 is the convection (circulation) fan enable; 0x35 is the cooling fan speed — two separate fans.** The vendor app sets enable = 1 but **speed = 0 for the whole heating phase**. The fan only spins at 50 % when the oven overshoots by more than 5 °C, and at 100 % during cool-down. The convection fan does run during heating; the cooling fan is purely reactive — it only spins up after the oven has already overshot, so it does little to prevent overshoot.
 
-The new tools run the fan at **100 % during the whole profile** by default. Change this with `--fan-speed` on the command line or "Fan speed % during run" in the GUI.
+The new tools default the cooling fan to **100 % during the whole profile**; you may want to lower it while heating. Change it with `--fan-speed` on the command line or "Cooling fan % during run" in the GUI.
 
 ## Board-temperature calibration
 The vendor app has no calibration command; the seven frames above are all it sends. If the oven firmware has a calibration or offset setting, it's on the front panel, not on the serial link. So calibration lives in this software instead. Both the GUI and `reflow.py run --cal` use a table `{"points": [[oven_C, board_C], ...]}` (see `calibration_example.json`).
@@ -69,12 +69,12 @@ Double-click **`Start GUI.bat`**, or run `python gui.py`. Close the vendor app f
   * **Load profile…** takes a JSON file of `[seconds, °C]` points, like `sac305.json`.
   * Set the fan outputs and controller settings, then click **Start profile**. When the profile ends, the oven cools down (heater off, fan 100 %) until it reaches *Cool to °C*, then returns to monitor.
 * **Calibrate tab:** load, build and save a calibration (see above).
-* **Manual control:** sliders for heater % and fan speed %, plus a fan-enable checkbox. Use it for step tests. The over-temperature cut-off still applies.
+* **Manual control:** sliders for heater % and cooling fan %, plus a convection-fan checkbox. Use it for step tests. The over-temperature cut-off still applies.
 * **STOP / HEATER OFF:** stops at any time, sets all outputs to 0, and keeps monitoring.
 * **CSV recording:** start or stop at any time, in any mode. There is one row per sample with these columns:
   `timestamp, t_s, mode, phase, setpoint_C, temp_oven_C (raw oven thermocouple), temp_board_est_C (calibrated, blank if none), predicted_C, heater_pct, fan_speed_pct, fan_enable`.
 
-The chart shows oven temperature, setpoint, the profile (grey), heater % and fan speed % (right-hand axis).
+The chart shows oven temperature, setpoint, the profile (grey), heater % and cooling fan % (right-hand axis).
 The grey profile overlay appears only while **Preview profile** is ticked *and* the Profile tab is open.
 **Clear chart** wipes the chart and restarts the time axis (and the CSV `t_s` column) at 0 s. A running profile or hold carries on unaffected, and the CSV `timestamp` column stays absolute.
 Closing the window, disconnecting, or losing the connection always turns the heater off.
